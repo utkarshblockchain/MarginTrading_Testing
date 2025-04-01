@@ -138,42 +138,42 @@ contract MarginTradeManagerTest is Test {
         assertEq(margin, depositAmount);
     }
     
-    // function testOpenAndClosePosition() public {
-    //     // First deposit some margin
-    //     uint256 depositAmount = 1 ether;
-    //     vm.prank(user);
-    //     manager.depositMargin{value: depositAmount}();
+    function testOpenAndClosePosition() public {
+        // First deposit some margin
+        uint256 depositAmount = 1 ether;
+        vm.prank(user);
+        manager.depositMargin{value: depositAmount}();
 
-    //     // Open a long position
-    //     vm.prank(user);
-    //     manager.openPosition(
-    //         100, // position size
-    //         10,  // leverage
-    //         0,   // sltp
-    //         false, // reduce only
-    //         MarginTradeManager.PositionType.LONG
-    //     );
+        // Open a long position
+        vm.prank(user);
+        manager.openPosition(
+            100, // position size
+            10,  // leverage
+            0,   // sltp
+            false, // reduce only
+            MarginTradeManager.PositionType.LONG
+        );
 
-    //     // Verify position details after opening
-    //     (,,,,, bool open, int256 lastEffectiveMargin, uint256 lastMarginRatio, uint256 lastUpdated, uint256 leverage, uint256 sltp, bool reduceOnly, MarginTradeManager.PositionType positionType, uint256 realizedPnL, uint256 fees) = manager.positions(user, 0);
-    //     assertTrue(open, "Position should be open");
-    //     assertEq(leverage, 10, "Incorrect leverage");
-    //     assertEq(uint256(positionType), uint256(MarginTradeManager.PositionType.LONG), "Incorrect position type");
+        // Verify position details after opening
+        (,,,,, bool open, int256 lastEffectiveMargin, uint256 lastMarginRatio, uint256 lastUpdated, uint256 leverage, uint256 sltp, bool reduceOnly, MarginTradeManager.PositionType positionType, uint256 realizedPnL, uint256 fees) = manager.positions(user, 0);
+        assertTrue(open, "Position should be open");
+        assertEq(leverage, 10, "Incorrect leverage");
+        assertEq(uint256(positionType), uint256(MarginTradeManager.PositionType.LONG), "Incorrect position type");
 
-    //     // Simulate price increase (from 1000 to 1100)
-    //     liquidationEngine.updatePrice(address(0), 1100 ether);
+        // Simulate price increase (from 1000 to 1100)
+        liquidationEngine.updatePrice(address(0), 1100 ether);
 
-    //     // Close the position
-    //     vm.prank(user);
-    //     manager.closePosition(0);
+        // Close the position
+        vm.prank(user);
+        manager.closePosition(0);
 
-    //     // Verify position details after closing
-    //     (,,,,, bool isOpen, int256 finalMargin, uint256 finalMarginRatio, uint256 finalUpdated, uint256 finalLeverage, uint256 finalSltp, bool finalReduceOnly, MarginTradeManager.PositionType finalPositionType, uint256 finalPnL, uint256 finalFees) = manager.positions(user, 0);
-    //     assertFalse(isOpen, "Position should be closed");
-    //     assertEq(finalLeverage, 0, "Position size should be zero");
-    //     assertGt(finalPnL, 0, "Should have positive PnL");
-    //     assertGt(finalFees, 0, "Should have collected fees");
-    // }
+        // Verify position details after closing
+        (,,,,, bool isOpen, int256 finalMargin, uint256 finalMarginRatio, uint256 finalUpdated, uint256 finalLeverage, uint256 finalSltp, bool finalReduceOnly, MarginTradeManager.PositionType finalPositionType, uint256 finalPnL, uint256 finalFees) = manager.positions(user, 0);
+        assertFalse(isOpen, "Position should be closed");
+        assertEq(finalLeverage, 0, "Position size should be zero");
+        assertGt(finalPnL, 0, "Should have positive PnL");
+        assertGt(finalFees, 0, "Should have collected fees");
+    }
     
     function test_RevertWhen_InsufficientMargin() public {
         vm.prank(user);
