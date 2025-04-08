@@ -1,0 +1,239 @@
+.trading-panel {
+    background-color: var(--dark-bg);
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.trading-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: var(--dark-bg);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.trading-form-container h2 {
+    margin-bottom: 20px;
+    color: var(--light-text);
+    font-size: 1.4rem;
+}
+
+.current-price {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price-value {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.margin-info {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.margin-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 120px;
+}
+
+.margin-item span:first-child {
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.margin-value {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.trading-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    color: var(--medium-gray);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    padding: 12px 15px;
+    border-radius: 5px;
+    border: 1px solid #3a4a5f;
+    background-color: #1c2833;
+    color: var(--light-text);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.position-type-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.position-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 5px;
+    background-color: #1c2833;
+    color: var(--light-text);
+    border: 1px solid #3a4a5f;
+    transition: all 0.2s ease;
+}
+
+.position-btn.active.long {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.position-btn.active.short {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.liquidation-estimate {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 12px 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    border-left: 3px solid var(--warning-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    margin: 15px 0;
+}
+
+.action-button {
+    padding: 14px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.open-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.open-button:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.close-button {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.close-button:hover:not(:disabled) {
+    background-color: #c0392b;
+}
+
+.close-position-container {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #3a4a5f;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.error-message {
+    color: var(--danger-color);
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: left;
+}
+
+.success-message {
+    color: var(--success-color);
+    background-color: rgba(46, 204, 113, 0.1);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: left;
+}
+
+.warning-message {
+    color: var(--warning-color);
+    background-color: rgba(230, 126, 34, 0.1);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: left;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .trading-panel {
+        padding: 15px;
+    }
+    
+    .position-type-selector {
+        flex-direction: column;
+    }
+    .trading-form-container {
+        margin-bottom: 20px;
+    }
+}
