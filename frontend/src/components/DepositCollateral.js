@@ -3,7 +3,7 @@ import { useWeb3 } from '../context/Web3Context';
 import '../styles/DepositCollateral.css';
 
 const DepositCollateral = () => {
-    const { web3, contracts, account, forceInitialize } = useWeb3();
+    const { web3, contracts, account, isInitialized } = useWeb3();
     const [amount, setAmount] = useState('');
     const [collateralType, setCollateralType] = useState('eth');
     const [loading, setLoading] = useState(false);
@@ -14,7 +14,6 @@ const DepositCollateral = () => {
     const [userTokenMargin, setUserTokenMargin] = useState('0');
     const [tokenBalance, setTokenBalance] = useState('0');
     const [allowance, setAllowance] = useState('0');
-    const [initializingContracts, setInitializingContracts] = useState(false);
 
     // Fetch user's margin balances
     useEffect(() => {
@@ -24,7 +23,7 @@ const DepositCollateral = () => {
                 return;
             }
 
-            if (!contracts.marginTrading || !contracts.mockToken) {
+            if (!contracts.marginTradeManager) {
                 console.log("Contract instances not initialized", contracts);
                 return;
             }
@@ -33,7 +32,7 @@ const DepositCollateral = () => {
                 // Try to get ETH margin
                 try {
                     // First try with userMargin function
-                    const ethMargin = await contracts.marginTrading.methods
+                    const ethMargin = await contracts.marginTradeManager.methods
                         .userMargin(account)
                         .call();
                     setUserMargin(web3.utils.fromWei(ethMargin, 'ether'));
@@ -54,7 +53,7 @@ const DepositCollateral = () => {
                 // Try to get token margin
                 try {
                     // First try with userTokenMargin function
-                    const tokenMargin = await contracts.marginTrading.methods
+                    const tokenMargin = await contracts.marginTradeManager.methods
                         .userTokenMargin(account, contracts.mockToken.options.address)
                         .call();
                     setUserTokenMargin(web3.utils.fromWei(tokenMargin, 'ether'));
@@ -78,25 +77,24 @@ const DepositCollateral = () => {
                 // Fetch current allowance
                 try {
                     const currentAllowance = await contracts.mockToken.methods
-                        .allowance(account, contracts.marginTrading.options.address)
+                        .allowance(account, contracts.marginTradeManager.options.address)
                         .call();
                     setAllowance(web3.utils.fromWei(currentAllowance, 'ether'));
                     console.log("Token allowance fetched:", web3.utils.fromWei(currentAllowance, 'ether'));
                 } catch (allowanceError) {
                     console.error("Error fetching token allowance:", allowanceError);
                 }
-
             } catch (error) {
-                console.error("Error in fetchMarginBalances:", error);
-                setError("Error fetching balances. Check console for details.");
+                console.error("Error fetching margin balances:", error);
             }
         };
 
         if (web3 && contracts && account) {
             fetchMarginBalances();
             
-            // Set up interval to refresh balances
+            // Set up an interval to fetch margin balances every 10 seconds
             const interval = setInterval(fetchMarginBalances, 10000);
+            
             return () => clearInterval(interval);
         }
     }, [web3, contracts, account]);
@@ -109,40 +107,34 @@ const DepositCollateral = () => {
         }
 
         if (!web3 || !contracts || !account) {
-            setError("Web3 connection not initialized");
+            setError("Web3 connection not established. Please connect your wallet.");
             return;
         }
 
-        if (!contracts.mockToken || !contracts.marginTrading) {
-            setError("Contract instances not initialized");
+        if (!contracts.mockToken || !contracts.marginTradeManager) {
+            setError("Contract instances not initialized. Please refresh the page.");
             return;
         }
+
+        setApprovalLoading(true);
+        setError(null);
+        setSuccess(null);
 
         try {
-            setApprovalLoading(true);
-            setError(null);
-            setSuccess(null);
-
-            // Use a very large approval amount to avoid needing multiple approvals
-            const maxApproval = web3.utils.toWei('1000000', 'ether');
+            const amountInWei = web3.utils.toWei(amount, 'ether');
             
-            console.log("Approving tokens for:", contracts.marginTrading.options.address);
-            console.log("From account:", account);
-            console.log("Amount:", maxApproval);
-
-            const approvalTx = await contracts.mockToken.methods
-                .approve(contracts.marginTrading.options.address, maxApproval)
+            // Approve tokens
+            await contracts.mockToken.methods
+                .approve(contracts.marginTradeManager.options.address, amountInWei)
                 .send({ from: account });
             
-            console.log("Token approval transaction:", approvalTx);
-            
-            // Fetch updated allowance
+            // Update allowance
             const newAllowance = await contracts.mockToken.methods
-                .allowance(account, contracts.marginTrading.options.address)
+                .allowance(account, contracts.marginTradeManager.options.address)
                 .call();
-            setAllowance(web3.utils.fromWei(newAllowance, 'ether'));
             
-            setSuccess(`Successfully approved tokens for deposit`);
+            setAllowance(web3.utils.fromWei(newAllowance, 'ether'));
+            setSuccess(`Successfully approved ${amount} tokens!`);
         } catch (error) {
             console.error("Error approving tokens:", error);
             setError(error.message || "Failed to approve tokens. Please try again.");
@@ -153,84 +145,63 @@ const DepositCollateral = () => {
 
     const handleDeposit = async (e) => {
         e.preventDefault();
+        
         if (!amount || parseFloat(amount) <= 0) {
             setError('Please enter a valid amount');
             return;
         }
 
         if (!web3 || !contracts || !account) {
-            setError("Web3 connection not initialized");
+            setError("Web3 connection not established. Please connect your wallet.");
             return;
         }
 
-        if (!contracts.marginTrading || (collateralType === 'token' && !contracts.mockToken)) {
-            setError("Contract instances not initialized");
+        if (!contracts.marginTradeManager) {
+            setError("Contract instances not initialized. Please refresh the page.");
             return;
         }
+
+        setLoading(true);
+        setError(null);
+        setSuccess(null);
 
         try {
-            setLoading(true);
-            setError(null);
-            setSuccess(null);
-
+            const amountInWei = web3.utils.toWei(amount, 'ether');
+            
             if (collateralType === 'eth') {
                 // Deposit ETH
-                const amountWei = web3.utils.toWei(amount, 'ether');
-                console.log("Depositing ETH:", amountWei);
+                await contracts.marginTradeManager.methods
+                    .depositMargin()
+                    .send({ from: account, value: amountInWei });
                 
-                try {
-                    // First try with depositMargin function
-                    await contracts.marginTrading.methods
-                        .depositMargin()
-                        .send({ from: account, value: amountWei });
-                    
-                    setSuccess(`Successfully deposited ${amount} ETH as collateral`);
-                } catch (depositError) {
-                    console.error("Error with depositMargin:", depositError);
-                    setError("Failed to deposit ETH. Check console for details.");
-                }
+                setSuccess(`Successfully deposited ${amount} ETH!`);
             } else {
-                // Deposit ERC20 token
-                const amountWei = web3.utils.toWei(amount, 'ether');
-                
-                // Check token balance first
-                const balance = await contracts.mockToken.methods.balanceOf(account).call();
-                console.log("Token balance:", web3.utils.fromWei(balance, 'ether'), "tokens");
-                
-                if (parseFloat(web3.utils.fromWei(balance, 'ether')) < parseFloat(amount)) {
-                    setError(`Insufficient token balance. You have ${web3.utils.fromWei(balance, 'ether')} tokens.`);
+                // Check if allowance is sufficient
+                if (parseFloat(allowance) < parseFloat(amount)) {
+                    setError(`Insufficient allowance. Please approve at least ${amount} tokens first.`);
                     setLoading(false);
                     return;
                 }
                 
-                // Check if token is already approved
-                const currentAllowance = await contracts.mockToken.methods
-                    .allowance(account, contracts.marginTrading.options.address)
-                    .call();
-                console.log("Current allowance:", web3.utils.fromWei(currentAllowance, 'ether'), "tokens");
+                // Deposit tokens
+                await contracts.marginTradeManager.methods
+                    .depositMarginERC20(contracts.mockToken.options.address, amountInWei)
+                    .send({ from: account });
                 
-                if (parseFloat(web3.utils.fromWei(currentAllowance, 'ether')) < parseFloat(amount)) {
-                    setError(`Insufficient token allowance. Please approve tokens first.`);
-                    setLoading(false);
-                    return;
-                }
-                
-                // Now deposit the token
-                try {
-                    console.log("Depositing tokens:", amountWei);
-                    await contracts.marginTrading.methods
-                        .depositMarginERC20(contracts.mockToken.options.address, amountWei)
-                        .send({ from: account });
-                    
-                    setSuccess(`Successfully deposited ${amount} tokens as collateral`);
-                } catch (depositError) {
-                    console.error("Error depositing tokens:", depositError);
-                    setError("Failed to deposit tokens. Please try again.");
-                    setLoading(false);
-                    return;
-                }
+                setSuccess(`Successfully deposited ${amount} tokens!`);
             }
-
+            
+            // Refresh balances
+            const ethMargin = await contracts.marginTradeManager.methods
+                .userMargin(account)
+                .call();
+            setUserMargin(web3.utils.fromWei(ethMargin, 'ether'));
+            
+            const tokenMargin = await contracts.marginTradeManager.methods
+                .userTokenMargin(account, contracts.mockToken.options.address)
+                .call();
+            setUserTokenMargin(web3.utils.fromWei(tokenMargin, 'ether'));
+            
             // Reset form
             setAmount('');
         } catch (error) {
@@ -247,29 +218,42 @@ const DepositCollateral = () => {
             return;
         }
 
-        if (!web3 || !contracts || !account || !contracts.marginTrading) {
-            setError("Web3 connection or contracts not initialized");
+        if (!web3 || !contracts || !account) {
+            setError("Web3 connection not established. Please connect your wallet.");
             return;
         }
 
-        try {
-            setLoading(true);
-            setError(null);
-            setSuccess(null);
+        if (!contracts.marginTradeManager) {
+            setError("Contract instances not initialized. Please refresh the page.");
+            return;
+        }
 
-            const amountWei = web3.utils.toWei(amount, 'ether');
-            console.log("Withdrawing margin:", amountWei);
+        setLoading(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const amountInWei = web3.utils.toWei(amount, 'ether');
             
-            try {
-                await contracts.marginTrading.methods
-                    .withdrawMargin(0, amountWei) // Using position ID 0 for simplicity
-                    .send({ from: account });
-                
-                setSuccess(`Successfully withdrew ${amount} from collateral`);
-            } catch (withdrawError) {
-                console.error("Error with withdrawMargin:", withdrawError);
-                setError("Failed to withdraw. Check console for details.");
-            }
+            // Withdraw margin
+            // Note: This assumes there's a withdrawMargin function in the contract
+            // You may need to adjust this based on your actual contract implementation
+            await contracts.marginTradeManager.methods
+                .withdrawMargin(0, amountInWei) // Assuming position ID 0 for now
+                .send({ from: account });
+            
+            setSuccess(`Successfully withdrew ${amount} ${collateralType === 'eth' ? 'ETH' : 'tokens'}!`);
+            
+            // Refresh balances
+            const ethMargin = await contracts.marginTradeManager.methods
+                .userMargin(account)
+                .call();
+            setUserMargin(web3.utils.fromWei(ethMargin, 'ether'));
+            
+            const tokenMargin = await contracts.marginTradeManager.methods
+                .userTokenMargin(account, contracts.mockToken.options.address)
+                .call();
+            setUserTokenMargin(web3.utils.fromWei(tokenMargin, 'ether'));
             
             // Reset form
             setAmount('');
@@ -281,49 +265,17 @@ const DepositCollateral = () => {
         }
     };
 
-    // Handle force initialization
-    const handleForceInitialize = async () => {
-        setInitializingContracts(true);
-        setError(null);
-        
-        try {
-            const success = await forceInitialize();
-            if (success) {
-                setSuccess("Contracts initialized successfully!");
-            } else {
-                setError("Failed to initialize contracts. Please check console for details.");
-            }
-        } catch (error) {
-            console.error("Error initializing contracts:", error);
-            setError("Error initializing contracts: " + error.message);
-        } finally {
-            setInitializingContracts(false);
-        }
-    };
-
-    // Check if contracts are initialized
-    const contractsInitialized = web3 && contracts && contracts.marginTrading && contracts.mockToken;
-
     return (
-        <div className="card deposit-collateral">
+        <div className="deposit-collateral-container">
             <h2>Deposit/Withdraw Collateral</h2>
             
-            {!contractsInitialized && (
-                <div className="contract-initialization">
-                    <div className="error-message">
-                        Waiting for contract initialization... Please make sure you're connected to the Sepolia testnet.
-                    </div>
-                    <button 
-                        className="action-button initialize-button"
-                        onClick={handleForceInitialize}
-                        disabled={initializingContracts}
-                    >
-                        {initializingContracts ? 'Initializing...' : 'Force Initialize Contracts'}
-                    </button>
+            {!isInitialized && (
+                <div className="warning-message">
+                    Waiting for contract initialization... Please make sure you're connected to the Sepolia testnet.
                 </div>
             )}
             
-            <div className="balance-info">
+            <div className="balance-container">
                 <div className="balance-item">
                     <span>ETH Margin:</span>
                     <span className="balance-value">{parseFloat(userMargin).toFixed(4)} ETH</span>
@@ -389,7 +341,7 @@ const DepositCollateral = () => {
                         <button 
                             type="button" 
                             onClick={handleApproveToken}
-                            disabled={approvalLoading || !amount || !contractsInitialized} 
+                            disabled={approvalLoading || !amount || !isInitialized} 
                             className="action-button approve-button"
                         >
                             {approvalLoading ? 'Approving...' : 'Approve Tokens'}
@@ -397,7 +349,7 @@ const DepositCollateral = () => {
                     )}
                     <button 
                         type="submit" 
-                        disabled={loading || !amount || !contractsInitialized || 
+                        disabled={loading || !amount || !isInitialized || 
                                 (collateralType === 'token' && parseFloat(allowance) < parseFloat(amount))} 
                         className="action-button deposit-button"
                     >
@@ -406,7 +358,7 @@ const DepositCollateral = () => {
                     <button 
                         type="button"
                         onClick={handleWithdraw}
-                        disabled={loading || !amount || !contractsInitialized} 
+                        disabled={loading || !amount || !isInitialized} 
                         className="action-button withdraw-button"
                     >
                         {loading ? 'Processing...' : 'Withdraw'}

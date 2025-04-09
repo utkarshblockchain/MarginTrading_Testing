@@ -1,7 +1,10 @@
 .app-header {
-    background-color: #1a1a2e;
+    background-color: var(--card-background);
     padding: 1rem 2rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .header-content {
@@ -13,10 +16,10 @@
 }
 
 .app-title {
-    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
     margin: 0;
-    font-size: 1.8rem;
-    font-weight: 600;
 }
 
 .connection-status {
@@ -25,19 +28,23 @@
 }
 
 .connect-button {
-    background-color: #3498db;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.5rem 1.2rem;
     border-radius: 4px;
+    padding: 0.5rem 1rem;
     font-size: 0.9rem;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .connect-button:hover {
     background-color: #2980b9;
+}
+
+.connect-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .account-info {
@@ -47,36 +54,74 @@
 }
 
 .network-badge {
-    background-color: #2c3e50;
-    color: #ecf0f1;
-    padding: 0.3rem 0.8rem;
-    border-radius: 4px;
+    background-color: rgba(52, 152, 219, 0.2);
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
     font-size: 0.8rem;
-    font-weight: 500;
+    font-weight: 600;
+    border: 1px solid var(--primary-color);
 }
 
 .account-address {
-    background-color: #34495e;
-    color: #ecf0f1;
-    padding: 0.3rem 0.8rem;
-    border-radius: 4px;
+    background-color: rgba(155, 89, 182, 0.2);
+    color: var(--secondary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
     font-size: 0.8rem;
-    font-weight: 500;
-    font-family: monospace;
+    font-weight: 600;
+    border: 1px solid var(--secondary-color);
 }
 
 .initialize-button {
-    background-color: #e74c3c;
+    background-color: var(--warning-color);
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
     border-radius: 4px;
+    padding: 0.5rem 1rem;
     font-size: 0.8rem;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .initialize-button:hover {
-    background-color: #c0392b;
+    background-color: #e67e22;
+}
+
+.initialize-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.wallet-connection {
+    position: relative;
+}
+
+.error-message.small {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    white-space: nowrap;
+    margin-top: 0.5rem;
+}
+
+.initialize-container {
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .account-info {
+        flex-wrap: wrap;
+    }
+    
+    .error-message.small {
+        position: static;
+        white-space: normal;
+    }
 }

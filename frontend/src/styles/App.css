@@ -71,14 +71,31 @@ h2 {
   margin-bottom: 1.5rem;
 }
 
-.form-group {
+.input-group {
   margin-bottom: 1.5rem;
+}
+
+.input-group.checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.input-group.checkbox input {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 input, select {
@@ -91,10 +108,43 @@ input, select {
   font-size: 1rem;
 }
 
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
 button {
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 1rem;
+}
+
+.btn {
+  display: inline-block;
+  text-align: center;
+}
+
+.btn.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn.secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn.primary:hover {
+  background-color: #2980b9;
+}
+
+.btn.secondary:hover {
+  background-color: #8e44ad;
 }
 
 button:disabled {
@@ -110,12 +160,85 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
+.error-message.small {
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.warning-message {
+  color: var(--warning-color);
+  background-color: rgba(243, 156, 18, 0.1);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
 .success-message {
   color: var(--success-color);
   background-color: rgba(46, 204, 113, 0.1);
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1rem;
+}
+
+.margin-info {
+  background-color: rgba(52, 152, 219, 0.1);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--primary-color);
+}
+
+.connection-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.connection-badge.success {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.info-content {
+  margin-bottom: 1.5rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.info-value {
+  color: var(--primary-color);
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+.refresh-btn {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.note {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--warning-color);
 }
 
 @media (max-width: 768px) {
@@ -125,5 +248,9 @@ button:disabled {
   
   .left-panel, .right-panel {
     width: 100%;
+  }
+  
+  .button-group {
+    flex-direction: column;
   }
 }
