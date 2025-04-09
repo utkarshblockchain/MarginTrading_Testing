@@ -228,23 +228,66 @@ export const Web3Provider = ({ children }) => {
             if (web3 && contracts.marginTradeManager && account && isInitialized) {
                 try {
                     console.log("Fetching user margin data...");
-                    // Get ETH margin
-                    const ethMargin = await contracts.marginTradeManager.methods.userMargin(account).call();
-                    setUserMargin(web3.utils.fromWei(ethMargin, 'ether'));
                     
-                    // Get token margin
-                    const tokenMargin = await contracts.marginTradeManager.methods.userTokenMargin(
-                        account, 
-                        contracts.mockToken.options.address
-                    ).call();
-                    setUserTokenMargin(web3.utils.fromWei(tokenMargin, 'ether'));
-                    
-                    console.log("User margins fetched:", {
-                        ethMargin: web3.utils.fromWei(ethMargin, 'ether'),
-                        tokenMargin: web3.utils.fromWei(tokenMargin, 'ether')
-                    });
+                    // Try to get ETH margin and token margin using the contract functions
+                    try {
+                        // Try to call userMargin function
+                        const ethMargin = await contracts.marginTradeManager.methods.userMargin(account).call();
+                        setUserMargin(web3.utils.fromWei(ethMargin, 'ether'));
+                        
+                        // Try to call userTokenMargin function
+                        const tokenMargin = await contracts.marginTradeManager.methods.userTokenMargin(
+                            account, 
+                            contracts.mockToken.options.address
+                        ).call();
+                        setUserTokenMargin(web3.utils.fromWei(tokenMargin, 'ether'));
+                        
+                        console.log("User margins fetched:", {
+                            ethMargin: web3.utils.fromWei(ethMargin, 'ether'),
+                            tokenMargin: web3.utils.fromWei(tokenMargin, 'ether')
+                        });
+                    } catch (error) {
+                        console.error("Error fetching ETH margin with userMargin:", error);
+                        
+                        // Fallback: Calculate margins by iterating through positions
+                        try {
+                            // Get user position count
+                            const positionCount = await contracts.marginTradeManager.methods.userPositionCount(account).call();
+                            console.log("User position count:", positionCount);
+                            
+                            let totalEthMargin = web3.utils.toBN('0');
+                            let totalTokenMargin = web3.utils.toBN('0');
+                            
+                            // Iterate through all positions
+                            for (let i = 0; i < positionCount; i++) {
+                                const position = await contracts.marginTradeManager.methods.positions(account, i).call();
+                                const margin = web3.utils.toBN(position.margin);
+                                
+                                // Check if this is ETH or token position
+                                if (position.collateralToken === '0x0000000000000000000000000000000000000000') {
+                                    totalEthMargin = totalEthMargin.add(margin);
+                                } else if (position.collateralToken === contracts.mockToken.options.address) {
+                                    totalTokenMargin = totalTokenMargin.add(margin);
+                                }
+                            }
+                            
+                            setUserMargin(web3.utils.fromWei(totalEthMargin, 'ether'));
+                            setUserTokenMargin(web3.utils.fromWei(totalTokenMargin, 'ether'));
+                            
+                            console.log("User margins calculated manually:", {
+                                ethMargin: web3.utils.fromWei(totalEthMargin, 'ether'),
+                                tokenMargin: web3.utils.fromWei(totalTokenMargin, 'ether')
+                            });
+                        } catch (fallbackError) {
+                            console.error("Error calculating margins manually:", fallbackError);
+                            setUserMargin('0');
+                            setUserTokenMargin('0');
+                        }
+                    }
                 } catch (error) {
                     console.error("Error fetching user margin:", error);
+                    setUserMargin('0');
+                    setUserTokenMargin('0');
                 }
             }
         };

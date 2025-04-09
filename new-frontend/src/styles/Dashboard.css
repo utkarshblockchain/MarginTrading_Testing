@@ -1,0 +1,114 @@
+/* Dashboard.css - Styling for the dashboard component */
+
+.dashboard {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard h2 {
+  margin-bottom: 1.5rem;
+  color: var(--dark-color);
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--light-color);
+  padding-bottom: 0.75rem;
+}
+
+.connect-prompt {
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  margin: 1rem 0;
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-card {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  text-align: center;
+  transition: var(--transition);
+  border-left: 4px solid var(--primary-color);
+}
+
+.dashboard-card:nth-child(2) {
+  border-left-color: var(--secondary-color);
+}
+
+.dashboard-card:nth-child(3) {
+  border-left-color: var(--accent-color);
+}
+
+.dashboard-card:nth-child(4) {
+  border-left-color: var(--danger-color);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--box-shadow);
+}
+
+.dashboard-card h3 {
+  font-size: 1rem;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-card .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+.dashboard-stats {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: var(--dark-color);
+}
+
+.stat-value {
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}

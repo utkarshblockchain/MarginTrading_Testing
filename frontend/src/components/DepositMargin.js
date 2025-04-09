@@ -78,33 +78,74 @@ const DepositMargin = () => {
             const weiAmount = web3.utils.toWei(amount, 'ether');
             console.log(`Depositing ${amount} tokens (${weiAmount} wei) as margin`);
 
+            // Check if the token is supported
+            try {
+                const isSupported = await contracts.marginTradeManager.methods.supportedCollateralTokens(
+                    contracts.mockToken.options.address
+                ).call();
+                
+                if (!isSupported) {
+                    throw new Error("This token is not supported for margin deposits. Please contact the administrator.");
+                }
+            } catch (error) {
+                console.error("Error checking if token is supported:", error);
+                throw new Error("Failed to verify token support. Please try again later.");
+            }
+
+            // Check token balance
+            try {
+                const balance = await contracts.mockToken.methods.balanceOf(account).call();
+                const balanceInEther = web3.utils.fromWei(balance, 'ether');
+                console.log(`Token balance: ${balanceInEther} tokens`);
+                
+                if (web3.utils.toBN(balance).lt(web3.utils.toBN(weiAmount))) {
+                    throw new Error(`Insufficient token balance. You have ${balanceInEther} tokens, but trying to deposit ${amount} tokens.`);
+                }
+            } catch (error) {
+                if (error.message.includes("Insufficient")) {
+                    throw error;
+                }
+                console.error("Error checking token balance:", error);
+                throw new Error("Failed to check token balance. Please try again later.");
+            }
+
             // First approve the token transfer
             console.log("Approving token transfer...");
-            const approvalTx = await contracts.mockToken.methods.approve(
-                contracts.marginTradeManager.options.address,
-                weiAmount
-            ).send({ from: account });
-            
-            console.log("Token approval successful:", approvalTx);
+            try {
+                const approvalTx = await contracts.mockToken.methods.approve(
+                    contracts.marginTradeManager.options.address,
+                    weiAmount
+                ).send({ from: account });
+                
+                console.log("Token approval successful:", approvalTx);
+            } catch (error) {
+                console.error("Error approving token transfer:", error);
+                throw new Error("Failed to approve token transfer. Please try again.");
+            }
 
             // Then deposit the tokens
             console.log("Depositing tokens...");
-            const depositTx = await contracts.marginTradeManager.methods.depositMarginERC20(
-                contracts.mockToken.options.address,
-                weiAmount
-            ).send({ from: account });
+            try {
+                const depositTx = await contracts.marginTradeManager.methods.depositMarginERC20(
+                    contracts.mockToken.options.address,
+                    weiAmount
+                ).send({ from: account });
 
-            console.log("Token deposit transaction successful:", depositTx);
-            setSuccessMessage(`Successfully deposited ${amount} tokens as margin`);
-            setSuccess(true);
-            
-            // Refresh position ID after deposit
-            const newCount = await contracts.marginTradeManager.methods.userPositionCount(account).call();
-            setPositionId(newCount);
-            
-            setAmount('');
+                console.log("Token deposit transaction successful:", depositTx);
+                setSuccessMessage(`Successfully deposited ${amount} tokens as margin`);
+                setSuccess(true);
+                
+                // Refresh position ID after deposit
+                const newCount = await contracts.marginTradeManager.methods.userPositionCount(account).call();
+                setPositionId(newCount);
+                
+                setAmount('');
+            } catch (error) {
+                console.error("Error depositing tokens:", error);
+                throw new Error("Failed to deposit tokens. The transaction was rejected by the contract.");
+            }
         } catch (error) {
-            console.error("Error depositing tokens:", error);
+            console.error("Error in deposit token process:", error);
             setError(error.message || "Failed to deposit tokens. Please try again.");
         } finally {
             setLoading(false);
